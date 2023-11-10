@@ -1,7 +1,8 @@
 import numpy as np
 import random
+from scipy.stats import norm
 
-def payoff_calculation(player, player_positions, player_count, M, points_per_position = 10):
+def payoff_calculation(player, player_positions, player_count, M, points_per_position = 10, normal = False):
     """
     Caluclate the payoff of a specified player given a strategy combination
     player: player for which we calculate the payoff
@@ -9,11 +10,18 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
     and value corresponding to their strategy
     player_count: dictionary with keys corresponding to strategies, 
     and values being number of players with this strategy
+    normal: boolean value to determine whether payoff is distributed uniformly
+    or normally
     score: value of the payoff for the given player
     """
+    if normal:
+        pass
+    else:
+        points_per_position_list = [points_per_position for poisition in range(M)]
+
 
     # giving player points from the position they are standing at
-    score = points_per_position/player_count[player_positions[player]]
+    score = points_per_position_list[player_positions[player]]/player_count[player_positions[player]]
 
     # looping thorugh the posiitions either side of the player to determine where nearest neighbours are
     left_neighbour, right_neighbour = player_positions[player] - 1, player_positions[player] + 1
@@ -30,28 +38,35 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
         else:
             right_neighbour += 1
     
-    # calculating score according to were neighbout is on each side
+    # calculating score according to were neighbour is on each side
     if left_neighbour == -1:
-        score += points_per_position * player_positions[player] / player_count[player_positions[player]]
+        # score += points_per_position * player_positions[player] / player_count[player_positions[player]]
+        score += sum(points_per_position_list[:player_positions[player]]) / player_count[player_positions[player]]
     else:
         if (player_positions[player] - left_neighbour - 1) % 2 == 0:
-            split = (player_positions[player] - left_neighbour - 1) / 2
-            score += points_per_position * split / player_count[player_positions[player]]
+            split = player_positions[player] - (player_positions[player] - left_neighbour - 1) / 2
+            # score += points_per_position * split / player_count[player_positions[player]]
+            score += sum(points_per_position_list[split:player_positions[player]]) / player_count[player_positions[player]]
         else:
-            split = (player_positions[player] - left_neighbour - 2) / 2
-            score += points_per_position * split / player_count[player_positions[player]]
-            score += points_per_position / (2 * player_count[player_positions[player]])
+            split = player_positions[player] - (player_positions[player] - left_neighbour - 2) / 2
+            # score += points_per_position * split / player_count[player_positions[player]]
+            score += sum(points_per_position_list[split:player_positions[player]]) / player_count[player_positions[player]]
+            # score += points_per_position / (2 * player_count[player_positions[player]])
+            score += points_per_position_list[split - 1] / (2 * player_count[player_positions[player]])
     
     if right_neighbour == M:
         score += points_per_position * (M - player_positions[player] - 1) / player_count[player_positions[player]]
     else:
         if (right_neighbour - player_positions[player] - 1) % 2 == 0:
-            split = (right_neighbour - player_positions[player] - 1) / 2
-            score += points_per_position * split / player_count[player_positions[player]]
+            split = player_positions[player] + (right_neighbour - player_positions[player] - 1) / 2
+            # score += points_per_position * split / player_count[player_positions[player]]
+            score += sum(points_per_position_list[player_positions[player]+1:split+1]) / player_count[player_positions[player]]
         else:
-            split = (right_neighbour - player_positions[player] - 2) / 2
-            score += points_per_position * split / player_count[player_positions[player]]
-            score += points_per_position / (2 * player_count[player_positions[player]])
+            split = player_positions[player] + (right_neighbour - player_positions[player] - 2) / 2
+            # score += points_per_position * split / player_count[player_positions[player]]
+            score += sum(points_per_position_list[player_positions[player]+1:split+1]) / player_count[player_positions[player]]
+            # score += points_per_position / (2 * player_count[player_positions[player]])
+            score += points_per_position_list[split + 1] / (2 * player_count[player_positions[player]])
     
     return score
 
