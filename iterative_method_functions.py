@@ -2,7 +2,7 @@ import numpy as np
 import random
 from scipy.stats import norm
 
-def payoff_calculation(player, player_positions, player_count, M, points_per_position = 10, normal = False):
+def payoff_calculation(player, player_positions, player_count, M, points_per_position, points_per_position_list):
     """
     Caluclate the payoff of a specified player given a strategy combination
     player: player for which we calculate the payoff
@@ -14,10 +14,6 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
     or normally
     score: value of the payoff for the given player
     """
-    if normal:
-        pass
-    else:
-        points_per_position_list = [points_per_position for poisition in range(M)]
 
 
     # giving player points from the position they are standing at
@@ -44,13 +40,13 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
         score += sum(points_per_position_list[:player_positions[player]]) / player_count[player_positions[player]]
     else:
         if (player_positions[player] - left_neighbour - 1) % 2 == 0:
-            split = player_positions[player] - (player_positions[player] - left_neighbour - 1) / 2
+            split = int(player_positions[player] - (player_positions[player] - left_neighbour - 1) / 2)
             # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[split:player_positions[player]]) / player_count[player_positions[player]]
         else:
-            split = player_positions[player] - (player_positions[player] - left_neighbour - 2) / 2
+            split = int(player_positions[player] - (player_positions[player] - left_neighbour - 2) / 2)
             # score += points_per_position * split / player_count[player_positions[player]]
-            score += sum(points_per_position_list[split:player_positions[player]]) / player_count[player_positions[player]]
+            score += sum(points_per_position_list[int(split):player_positions[player]]) / player_count[player_positions[player]]
             # score += points_per_position / (2 * player_count[player_positions[player]])
             score += points_per_position_list[split - 1] / (2 * player_count[player_positions[player]])
     
@@ -58,11 +54,11 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
         score += points_per_position * (M - player_positions[player] - 1) / player_count[player_positions[player]]
     else:
         if (right_neighbour - player_positions[player] - 1) % 2 == 0:
-            split = player_positions[player] + (right_neighbour - player_positions[player] - 1) / 2
+            split = int(player_positions[player] + (right_neighbour - player_positions[player] - 1) / 2)
             # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[player_positions[player]+1:split+1]) / player_count[player_positions[player]]
         else:
-            split = player_positions[player] + (right_neighbour - player_positions[player] - 2) / 2
+            split = int(player_positions[player] + (right_neighbour - player_positions[player] - 2) / 2)
             # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[player_positions[player]+1:split+1]) / player_count[player_positions[player]]
             # score += points_per_position / (2 * player_count[player_positions[player]])
@@ -71,7 +67,7 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
     return score
 
 
-def election_equilibrium(N = 2, M = 10, nsim = 1000):
+def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, normal = False):
     """
     Find equilibria of the election game by iteratively moving each 
     player to their best response.
@@ -82,6 +78,12 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000):
     """
 
     equilibria= []
+
+    if normal:
+        position_boundaries = np.linspace(-2,2,M+1)
+        points_per_position_list = [points_per_position * (norm.cdf(position_boundaries[i+1]) - norm.cdf(position_boundaries[i])) for i in range(M)]
+    else:
+        points_per_position_list = [points_per_position for _ in range(M)]
 
     for sim in range(nsim):
         player_positions = {player: np.random.randint(0,M) for player in range(N)}
@@ -111,7 +113,7 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000):
                     player_count_temp[player_positions_temp[player]] -= 1
                     player_count_temp[position] += 1
                     player_positions_temp[player] = position
-                    payoffs_per_position[position] = payoff_calculation(player, player_positions_temp, player_count_temp, M)
+                    payoffs_per_position[position] = payoff_calculation(player, player_positions_temp, player_count_temp, M, points_per_position, points_per_position_list)
 
                 max_payoff = max(payoffs_per_position.values())
                 best_responses = [k for k,v in payoffs_per_position.items() if v == max_payoff]
@@ -131,4 +133,3 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000):
             equilibria.append(player_count)
 
     return equilibria
-
