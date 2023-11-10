@@ -15,7 +15,6 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
     score: value of the payoff for the given player
     """
 
-
     # giving player points from the position they are standing at
     score = points_per_position_list[player_positions[player]]/player_count[player_positions[player]]
 
@@ -40,31 +39,32 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
         score += sum(points_per_position_list[:player_positions[player]]) / player_count[player_positions[player]]
     else:
         if (player_positions[player] - left_neighbour - 1) % 2 == 0:
-            split = int(player_positions[player] - (player_positions[player] - left_neighbour - 1) / 2)
+            split = player_positions[player] - int((player_positions[player] - left_neighbour - 1) / 2)
             # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[split:player_positions[player]]) / player_count[player_positions[player]]
         else:
-            split = int(player_positions[player] - (player_positions[player] - left_neighbour - 2) / 2)
+            split = player_positions[player] - int((player_positions[player] - left_neighbour - 2) / 2)
             # score += points_per_position * split / player_count[player_positions[player]]
-            score += sum(points_per_position_list[int(split):player_positions[player]]) / player_count[player_positions[player]]
+            score += sum(points_per_position_list[split:player_positions[player]]) / player_count[player_positions[player]]
             # score += points_per_position / (2 * player_count[player_positions[player]])
             score += points_per_position_list[split - 1] / (2 * player_count[player_positions[player]])
     
     if right_neighbour == M:
-        score += points_per_position * (M - player_positions[player] - 1) / player_count[player_positions[player]]
+        score += sum(points_per_position_list[player_positions[player]+1:]) / player_count[player_positions[player]]
+        # score += points_per_position * (M - player_positions[player] - 1) / player_count[player_positions[player]]
     else:
         if (right_neighbour - player_positions[player] - 1) % 2 == 0:
-            split = int(player_positions[player] + (right_neighbour - player_positions[player] - 1) / 2)
+            split = player_positions[player] + int((right_neighbour - player_positions[player] - 1) / 2)
             # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[player_positions[player]+1:split+1]) / player_count[player_positions[player]]
         else:
-            split = int(player_positions[player] + (right_neighbour - player_positions[player] - 2) / 2)
+            split = player_positions[player] + int((right_neighbour - player_positions[player] - 2) / 2)
             # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[player_positions[player]+1:split+1]) / player_count[player_positions[player]]
             # score += points_per_position / (2 * player_count[player_positions[player]])
             score += points_per_position_list[split + 1] / (2 * player_count[player_positions[player]])
     
-    return score
+    return round(score,5)
 
 
 def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, normal = False):
@@ -81,20 +81,20 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
 
     if normal:
         position_boundaries = np.linspace(-2,2,M+1)
-        points_per_position_list = [points_per_position * (norm.cdf(position_boundaries[i+1]) - norm.cdf(position_boundaries[i])) for i in range(M)]
+        points_per_position_list = [10 * (norm.cdf(position_boundaries[i+1]) - norm.cdf(position_boundaries[i])) for i in range(M)]
+        # print(points_per_position_list)
     else:
         points_per_position_list = [points_per_position for _ in range(M)]
 
     for sim in range(nsim):
         player_positions = {player: np.random.randint(0,M) for player in range(N)}
+        # player_positions = {0: 2, 1: 2}
 
         # randomly assigning initial positions to each player
         # creating dictionary where key is the position, and value is a list of the players at that position
         player_count = {position: 0 for position in range(M)}
         for player in range(N):
             player_count[player_positions[player]] += 1
-            # initial_position = np.random.randint(0,N)
-            # positions[initial_position].append(player)
 
         # initialising empty scores dict
         payoffs_per_position = {position: 0 for position in range(M)}
@@ -103,6 +103,9 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
         player_moved = True
         iteration_count = 0
         while player_moved:
+
+            total_score_temp = 0
+
             player_moved = False
             for player in range(N):
                 iteration_count += 1
@@ -114,8 +117,11 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
                     player_count_temp[position] += 1
                     player_positions_temp[player] = position
                     payoffs_per_position[position] = payoff_calculation(player, player_positions_temp, player_count_temp, M, points_per_position, points_per_position_list)
+                
+                # print(f"Payoffs per position for player {player}: {payoffs_per_position}")
 
                 max_payoff = max(payoffs_per_position.values())
+                total_score_temp += max_payoff
                 best_responses = [k for k,v in payoffs_per_position.items() if v == max_payoff]
                 best_response = random.sample(best_responses,1)[0]
 
@@ -124,6 +130,7 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
                     player_count[best_response] += 1
                     player_positions[player] = best_response
                     player_moved = True
+            # print(f"sum{total_score_temp}")
                     
             if iteration_count > M*100:
                 # print(f"No equilibrium found after {M*100} iterations!")
