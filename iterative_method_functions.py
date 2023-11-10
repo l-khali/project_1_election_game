@@ -126,10 +126,14 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
                     player_moved = True
                     
             if iteration_count > M*100:
-                print(f"No equilibrium found after {M*100} iterations!")
+                # print(f"No equilibrium found after {M*100} iterations!")
                 break
             
         if player_moved == False and player_count not in equilibria:
             equilibria.append(player_count)
 
-    return equilibria
+    if equilibria:
+        return equilibria
+    else:
+        print(f"No equilibria found after {nsim} simulations!")
+        return None
