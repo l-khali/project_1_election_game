@@ -123,50 +123,7 @@ def election_eq(n, m):
 
     return unique_eq
 
-def election_eq(n, m):
-    """
-    Find equilibria for a given election game
-    n: number of players
-    m: number of strategies
-    
-    unique_eq: array of equilibria
-    """
-    # find normal distribution bounds
-    norm_bounds = np.linspace(-2,2,m+1)
-    # find available points at each position
-    pos_points = [norm.cdf(norm_bounds[i+1]) - norm.cdf(norm_bounds[i]) for i in range(m)]
-
-    payoff = gen_election_mat(n, m, np.array(gen_blank_payoff(n, n, m)), pos_points)
-    eq = equilibria(payoff, m)
-    sorted_eq = [sorted(np.array(e)) for e in eq]
-    unique_eq = np.unique(sorted_eq, axis=0)
-
-    return unique_eq
-
-def gen_election_mat(n, m, payoff_mat, norm_pos, ind=[]):
-    """
-    Construct a payoff matrix for a given election game
-    n: number of players
-    m: number of possible positions
-    payoff_mat: n-dimensional empty array to be populated
-    ind: list indexing entry in payoff matrix
-    
-    payoff_mat: n-dimensional array of payoffs
-    """
-    # end of recursion to start populating payoffs
-    if n==1:
-        for j in range(m):
-            payoff_mat[tuple(ind+[j])] = election_payoff(np.array(ind+[j]),m, norm_pos)
-    
-    # recursively loop through dimensions
-    else:
-        n -= 1
-        for i in range(m):
-            payoff_mat = gen_election_mat(n, m, payoff_mat, norm_pos, ind+[i])
-    
-    return payoff_mat
-
-def election_payoff(positions, m, norm_pos):
+def norm_election_payoff(positions, m, norm_pos):
     """
     Caluclate the payoff for each player given a strategy combination under a
     normal distribution of voters
@@ -200,3 +157,49 @@ def election_payoff(positions, m, norm_pos):
             payoffs[player_inds] += score/len(player_inds)
     
     return payoffs
+
+def gen_norm_election_mat(n, m, payoff_mat, norm_pos, ind=[]):
+    """
+    Construct a payoff matrix for a given election game under a normal
+    distribution of voters
+    n: number of players
+    m: number of possible positions
+    payoff_mat: n-dimensional empty array to be populated
+    ind: list indexing entry in payoff matrix
+    
+    payoff_mat: n-dimensional array of payoffs
+    """
+    # end of recursion to start populating payoffs
+    if n==1:
+        for j in range(m):
+            payoff_mat[tuple(ind+[j])] = norm_election_payoff(np.array(ind+[j]),m, norm_pos)
+    
+    # recursively loop through dimensions
+    else:
+        n -= 1
+        for i in range(m):
+            payoff_mat = gen_norm_election_mat(n, m, payoff_mat, norm_pos, ind+[i])
+    
+    return payoff_mat
+
+def norm_election_eq(n, m):
+    """
+    Find equilibria for a given election game under a normal
+    distribution of voters
+    n: number of players
+    m: number of strategies
+    
+    unique_eq: array of equilibria
+    """
+    # find normal distribution bounds
+    norm_bounds = np.linspace(-2,2,m+1)
+    # find available points at each position
+    pos_points = [round(norm.cdf(norm_bounds[i+1]) - norm.cdf(norm_bounds[i]), 5) for i in range(m)]
+
+    payoff = gen_norm_election_mat(n, m, np.array(gen_blank_payoff(n, n, m)), pos_points)
+    eq = equilibria(payoff, m)
+    sorted_eq = [sorted(np.array(e)) for e in eq]
+    unique_eq = np.unique(sorted_eq, axis=0)
+
+    return unique_eq
+
