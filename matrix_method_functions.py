@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.stats import norm
 
 def election_payoff(positions, m):
     """
@@ -121,3 +122,81 @@ def election_eq(n, m):
     unique_eq = np.unique(sorted_eq, axis=0)
 
     return unique_eq
+
+def election_eq(n, m):
+    """
+    Find equilibria for a given election game
+    n: number of players
+    m: number of strategies
+    
+    unique_eq: array of equilibria
+    """
+    # find normal distribution bounds
+    norm_bounds = np.linspace(-2,2,m+1)
+    # find available points at each position
+    pos_points = [norm.cdf(norm_bounds[i+1]) - norm.cdf(norm_bounds[i]) for i in range(m)]
+
+    payoff = gen_election_mat(n, m, np.array(gen_blank_payoff(n, n, m)), pos_points)
+    eq = equilibria(payoff, m)
+    sorted_eq = [sorted(np.array(e)) for e in eq]
+    unique_eq = np.unique(sorted_eq, axis=0)
+
+    return unique_eq
+
+def gen_election_mat(n, m, payoff_mat, norm_pos, ind=[]):
+    """
+    Construct a payoff matrix for a given election game
+    n: number of players
+    m: number of possible positions
+    payoff_mat: n-dimensional empty array to be populated
+    ind: list indexing entry in payoff matrix
+    
+    payoff_mat: n-dimensional array of payoffs
+    """
+    # end of recursion to start populating payoffs
+    if n==1:
+        for j in range(m):
+            payoff_mat[tuple(ind+[j])] = election_payoff(np.array(ind+[j]),m, norm_pos)
+    
+    # recursively loop through dimensions
+    else:
+        n -= 1
+        for i in range(m):
+            payoff_mat = gen_election_mat(n, m, payoff_mat, norm_pos, ind+[i])
+    
+    return payoff_mat
+
+def election_payoff(positions, m, norm_pos):
+    """
+    Caluclate the payoff for each player given a strategy combination under a
+    normal distribution of voters
+    positions: array of positions (strategies) chosen by each player
+    m: number of possible positions
+    
+    payoffs: array of payoffs for each player
+    """
+
+    # initialise payoffs
+    payoffs = np.zeros(len(positions))
+
+    # find unique positions chosen by players
+    unique_pos = np.unique(positions)
+    
+    # for each position, assign votes to the closest players
+    for i in range(m):
+        # find the minimum distance to an occupied position
+        distances = np.array([abs(p-i) for p in unique_pos])
+        min_dist = min(distances)
+        
+        # find the unique positions of players which will earn points
+        win_pos = unique_pos[np.where(distances==min_dist)[0]]
+
+        # divide payoff amongst the winning positions
+        score = norm_pos[i]/len(win_pos)
+        
+        # for each winning position, divide points amongst players
+        for p in win_pos:
+            player_inds = np.where(positions==p)[0]
+            payoffs[player_inds] += score/len(player_inds)
+    
+    return payoffs
