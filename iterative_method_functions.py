@@ -1,8 +1,10 @@
 import numpy as np
 import random
 from scipy.stats import norm
+import itertools
+import matplotlib.pyplot as plt
 
-def payoff_calculation(player, player_positions, player_count, M, points_per_position, points_per_position_list):
+def payoff_calculation(player, player_positions, player_count, M, points_per_position_list):
     """
     Caluclate the payoff of a specified player given a strategy combination
     player: player for which we calculate the payoff
@@ -35,33 +37,25 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
     
     # calculating score according to were neighbour is on each side
     if left_neighbour == -1:
-        # score += points_per_position * player_positions[player] / player_count[player_positions[player]]
         score += sum(points_per_position_list[:player_positions[player]]) / player_count[player_positions[player]]
     else:
         if (player_positions[player] - left_neighbour - 1) % 2 == 0:
             split = player_positions[player] - int((player_positions[player] - left_neighbour - 1) / 2)
-            # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[split:player_positions[player]]) / player_count[player_positions[player]]
         else:
             split = player_positions[player] - int((player_positions[player] - left_neighbour - 2) / 2)
-            # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[split:player_positions[player]]) / player_count[player_positions[player]]
-            # score += points_per_position / (2 * player_count[player_positions[player]])
             score += points_per_position_list[split - 1] / (2 * player_count[player_positions[player]])
     
     if right_neighbour == M:
         score += sum(points_per_position_list[player_positions[player]+1:]) / player_count[player_positions[player]]
-        # score += points_per_position * (M - player_positions[player] - 1) / player_count[player_positions[player]]
     else:
         if (right_neighbour - player_positions[player] - 1) % 2 == 0:
             split = player_positions[player] + int((right_neighbour - player_positions[player] - 1) / 2)
-            # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[player_positions[player]+1:split+1]) / player_count[player_positions[player]]
         else:
             split = player_positions[player] + int((right_neighbour - player_positions[player] - 2) / 2)
-            # score += points_per_position * split / player_count[player_positions[player]]
             score += sum(points_per_position_list[player_positions[player]+1:split+1]) / player_count[player_positions[player]]
-            # score += points_per_position / (2 * player_count[player_positions[player]])
             score += points_per_position_list[split + 1] / (2 * player_count[player_positions[player]])
     
     return round(score,5)
@@ -77,18 +71,17 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
     equilibria: list of dictionaries, each dictionary specifies positions for an equilibrium
     """
 
-    equilibria= []
+    equilibria = []
+    equilibria_count = []
 
     if normal:
         position_boundaries = np.linspace(-2,2,M+1)
         points_per_position_list = [10 * (norm.cdf(position_boundaries[i+1]) - norm.cdf(position_boundaries[i])) for i in range(M)]
-        # print(points_per_position_list)
     else:
         points_per_position_list = [points_per_position for _ in range(M)]
 
     for sim in range(nsim):
         player_positions = {player: np.random.randint(0,M) for player in range(N)}
-        # player_positions = {0: 2, 1: 2}
 
         # randomly assigning initial positions to each player
         # creating dictionary where key is the position, and value is a list of the players at that position
@@ -116,9 +109,7 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
                     player_count_temp[player_positions_temp[player]] -= 1
                     player_count_temp[position] += 1
                     player_positions_temp[player] = position
-                    payoffs_per_position[position] = payoff_calculation(player, player_positions_temp, player_count_temp, M, points_per_position, points_per_position_list)
-                
-                # print(f"Payoffs per position for player {player}: {payoffs_per_position}")
+                    payoffs_per_position[position] = payoff_calculation(player, player_positions_temp, player_count_temp, M, points_per_position_list)
 
                 max_payoff = max(payoffs_per_position.values())
                 total_score_temp += max_payoff
@@ -130,16 +121,23 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
                     player_count[best_response] += 1
                     player_positions[player] = best_response
                     player_moved = True
-            # print(f"sum{total_score_temp}")
                     
             if iteration_count > M*100:
                 # print(f"No equilibrium found after {M*100} iterations!")
                 break
             
-        if player_moved == False and player_count not in equilibria:
-            equilibria.append(player_count)
+        if player_moved == False and player_count not in equilibria_count:
+            # equilibria.append(player_count)
+            equilibria_count.append(player_count)
+            equilibria.append(list(player_positions.values()))
 
     if equilibria:
+        cm = plt.cm.get_cmap('RdYlBu_r')
+        hist_vals = list(itertools.chain.from_iterable(equilibria))
+        plt.figure()
+        plt.hist(hist_vals, bins = M, range=(-0.5,M-0.5), rwidth = 0.8, color=cm)
+        plt.xticks([0,1,2,3,4,5,6,7,8,9])
+        plt.title(f"Equilibria positions for {N} players, {M} strategies", fontsize=15)
         return equilibria
     else:
         print(f"No equilibria found after {nsim} simulations!")
