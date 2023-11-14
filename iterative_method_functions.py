@@ -3,6 +3,7 @@ import random
 from scipy.stats import norm
 import itertools
 import matplotlib.pyplot as plt
+from matplotlib import colormaps
 
 def payoff_calculation(player, player_positions, player_count, M, points_per_position_list):
     """
@@ -132,12 +133,25 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
             equilibria.append(list(player_positions.values()))
 
     if equilibria:
-        cm = plt.cm.get_cmap('RdYlBu_r')
+        cm = plt.cm.get_cmap('brg')
+
         hist_vals = list(itertools.chain.from_iterable(equilibria))
         plt.figure()
-        plt.hist(hist_vals, bins = M, range=(-0.5,M-0.5), rwidth = 0.8, color=cm)
+
+        n, bins, patches = plt.hist(hist_vals, bins = M, range=(-0.5,M-0.5), rwidth = 0.8, color='green')
+        # To normalize your values
+        col = (n-n.min())/(n.max()-n.min())
+        for c, p in zip(col, patches):
+            plt.setp(p, 'facecolor', cm(c))
         plt.xticks([0,1,2,3,4,5,6,7,8,9])
         plt.title(f"Equilibria positions for {N} players, {M} strategies", fontsize=15)
+        plt.show()
+
+        # hist_vals = list(itertools.chain.from_iterable(equilibria))
+        # plt.figure()
+        # plt.hist(hist_vals, bins = M, range=(-0.5,M-0.5), rwidth = 0.8, color=cm)
+        # plt.xticks([0,1,2,3,4,5,6,7,8,9])
+        # plt.title(f"Equilibria positions for {N} players, {M} strategies", fontsize=15)
         return equilibria
     else:
         print(f"No equilibria found after {nsim} simulations!")
