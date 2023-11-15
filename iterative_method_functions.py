@@ -123,7 +123,7 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
                     player_positions[player] = best_response
                     player_moved = True
                     
-            if iteration_count > M*100:
+            if iteration_count > M*10:
                 # print(f"No equilibrium found after {M*100} iterations!")
                 break
             
@@ -143,15 +143,14 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
         col = (n-n.min())/(n.max()-n.min())
         for c, p in zip(col, patches):
             plt.setp(p, 'facecolor', cm(c))
-        plt.xticks([0,1,2,3,4,5,6,7,8,9])
+        
+        if M > 10:
+            plt.xticks(list(range(0,M,5)))
+        else:
+            plt.xticks(list(range(M)))
         plt.title(f"Equilibria positions for {N} players, {M} strategies", fontsize=15)
         plt.show()
-
-        # hist_vals = list(itertools.chain.from_iterable(equilibria))
-        # plt.figure()
-        # plt.hist(hist_vals, bins = M, range=(-0.5,M-0.5), rwidth = 0.8, color=cm)
-        # plt.xticks([0,1,2,3,4,5,6,7,8,9])
-        # plt.title(f"Equilibria positions for {N} players, {M} strategies", fontsize=15)
+        
         return equilibria
     else:
         print(f"No equilibria found after {nsim} simulations!")
