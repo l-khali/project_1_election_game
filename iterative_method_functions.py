@@ -62,7 +62,7 @@ def payoff_calculation(player, player_positions, player_count, M, points_per_pos
     return round(score,5)
 
 
-def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, normal = False):
+def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, normal = False, random_sequence = False):
     """
     Find equilibria of the election game by iteratively moving each 
     player to their best response.
@@ -101,7 +101,13 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
             total_score_temp = 0
 
             player_moved = False
-            for player in range(N):
+
+            if random_sequence:
+                player_iterable = np.random.randint(0,N,N*10)
+            else:
+                player_iterable = range(N)
+
+            for player in player_iterable:
                 iteration_count += 1
                 current_position = player_positions[player]
                 player_positions_temp = player_positions.copy()
@@ -123,32 +129,30 @@ def election_equilibrium(N = 2, M = 10, nsim = 1000, points_per_position = 10, n
                     player_positions[player] = best_response
                     player_moved = True
                     
-            if iteration_count > M*10:
+            if iteration_count > M*100:
                 # print(f"No equilibrium found after {M*100} iterations!")
                 break
             
         if player_moved == False and player_count not in equilibria_count:
-            # equilibria.append(player_count)
             equilibria_count.append(player_count)
             equilibria.append(list(player_positions.values()))
 
     if equilibria:
+        # plotting histogram
         cm = plt.cm.get_cmap('brg')
-
         hist_vals = list(itertools.chain.from_iterable(equilibria))
         plt.figure()
-
         n, bins, patches = plt.hist(hist_vals, bins = M, range=(-0.5,M-0.5), rwidth = 0.8, color='green')
         # To normalize your values
         col = (n-n.min())/(n.max()-n.min())
         for c, p in zip(col, patches):
             plt.setp(p, 'facecolor', cm(c))
-        
         if M > 10:
             plt.xticks(list(range(0,M,5)))
         else:
             plt.xticks(list(range(M)))
         plt.title(f"Equilibria positions for {N} players, {M} strategies", fontsize=15)
+        plt.xlabel("Position", fontsize=13)
         plt.show()
         
         return equilibria
