@@ -8,8 +8,10 @@ The code for the matrix method can be found [here](https://github.com/l-khali/pr
 
 The code for the iterative method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/iterative_method_functions.py). 
 
-The code for the results for the discrete game using matrix method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/matrix_method_results.ipynb). 
 
+The results are presented as a list of lists, where each inner list contains positions of each player at equilibria. 
+
+The code for the results for the discrete game using matrix method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/matrix_method_results.ipynb). 
 
 The code for the results for the discrete game using iterative method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/iterative_method_results.ipynb). 
 
