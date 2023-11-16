@@ -7,8 +7,10 @@ We use two computational approaches, a more complete matrix method, which extend
 The code for the matrix method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/matrix_method_functions.py). 
 
 The code for the iterative method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/iterative_method_functions.py). 
-The code for the results for the discrete game using matrix method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/matrix_method_results.ipynb).\
 
-The code for the results for the discrete game using iterative method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/iterative_method_results.ipynb).\
+The code for the results for the discrete game using matrix method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/matrix_method_results.ipynb). 
+
+
+The code for the results for the discrete game using iterative method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/iterative_method_results.ipynb). 
 
 The code for the results for the continuous approximation game using iterative method can be found [here](https://github.com/l-khali/project_1_election_game/blob/main/iterative_method_results_continuous.ipynb).
